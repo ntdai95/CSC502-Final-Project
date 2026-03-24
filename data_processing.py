@@ -84,7 +84,7 @@ try:
         .withColumn("day_cos", cos(col("day_of_year") * lit(2 * math.pi / 365.0)))
     )
 
-    filtered = filtered.repartition(16, "TAXON CONCEPT ID").cache()
+    filtered = filtered.dropna().repartition(16, "TAXON CONCEPT ID").cache()
     species_counts = filtered.groupBy("TAXON CONCEPT ID").agg(spark_count("*").alias("species_count"))
     total_count = species_counts.agg(spark_sum("species_count").alias("total")).collect()[0]["total"]
     species_freq = species_counts.withColumn("species_frequency", 
@@ -93,7 +93,7 @@ try:
     
     final_df = filtered.join(species_freq, on="TAXON CONCEPT ID", 
                              how="left").select("TAXON CONCEPT ID", "species_frequency", "OBSERVATION COUNT", "LATITUDE", 
-                                                "LONGITUDE", "day_sin", "day_cos", "REVIEWED").dropna()
+                                                "LONGITUDE", "day_sin", "day_cos", "REVIEWED")
 
     temp_output_dir = output_file + "_spark_temp"
     if os.path.exists(temp_output_dir):
