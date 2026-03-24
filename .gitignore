@@ -1,0 +1,21 @@
+# Ignore all text and CSV data files
+*.txt
+*.csv
+
+# Ignore large data directories
+data/*
+
+# Spark output folders
+*_spark_temp/
+spark-temp/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
