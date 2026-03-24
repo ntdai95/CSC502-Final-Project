@@ -9,7 +9,6 @@ spark_temp_dir = "data/spark-temp"
 os.makedirs(spark_temp_dir, exist_ok=True)
 spark = (
     SparkSession.builder
-    .appName("eBird_Data_Processing_Single_CSV")
     .master("local[*]")
     .config("spark.driver.memory", "6g")
     .config("spark.executor.memory", "6g")
@@ -42,13 +41,13 @@ try:
 
     df = (
         df.withColumn("OBSERVATION COUNT",
-                      when(col("OBSERVATION COUNT").isNull() | (col("OBSERVATION COUNT") == "") | (col("OBSERVATION COUNT") == "X"), 
+                      when(col("OBSERVATION COUNT").isNull() | (col("OBSERVATION COUNT") == "") | (col("OBSERVATION COUNT") == "X"),
                            None).otherwise(col("OBSERVATION COUNT")).cast("double")
         ).withColumn("LATITUDE",
-                     when(col("LATITUDE").isNull() | (col("LATITUDE") == ""), 
+                     when(col("LATITUDE").isNull() | (col("LATITUDE") == ""),
                           None).otherwise(col("LATITUDE")).cast("double")
         ).withColumn("LONGITUDE",
-                     when(col("LONGITUDE").isNull() | (col("LONGITUDE") == ""), 
+                     when(col("LONGITUDE").isNull() | (col("LONGITUDE") == ""),
                           None).otherwise(col("LONGITUDE")).cast("double")
         ).withColumn("DURATION MINUTES",
                      when(col("DURATION MINUTES").isNull() | (col("DURATION MINUTES") == ""),
@@ -87,12 +86,12 @@ try:
     filtered = filtered.dropna().repartition(16, "TAXON CONCEPT ID").cache()
     species_counts = filtered.groupBy("TAXON CONCEPT ID").agg(spark_count("*").alias("species_count"))
     total_count = species_counts.agg(spark_sum("species_count").alias("total")).collect()[0]["total"]
-    species_freq = species_counts.withColumn("species_frequency", 
-                                             col("species_count") / lit(float(total_count))).select("TAXON CONCEPT ID", 
+    species_freq = species_counts.withColumn("species_frequency",
+                                             col("species_count") / lit(float(total_count))).select("TAXON CONCEPT ID",
                                                                                                     "species_frequency")
-    
-    final_df = filtered.join(species_freq, on="TAXON CONCEPT ID", 
-                             how="left").select("TAXON CONCEPT ID", "species_frequency", "OBSERVATION COUNT", "LATITUDE", 
+
+    final_df = filtered.join(species_freq, on="TAXON CONCEPT ID",
+                             how="left").select("TAXON CONCEPT ID", "species_frequency", "OBSERVATION COUNT", "LATITUDE",
                                                 "LONGITUDE", "day_sin", "day_cos", "REVIEWED")
 
     temp_output_dir = output_file + "_spark_temp"
@@ -111,7 +110,7 @@ try:
 
     shutil.move(part_file, output_file)
     shutil.rmtree(temp_output_dir)
-    print(f"Done. Single CSV saved to: {output_file}")
+    print(f"CSV saved to: {output_file}")
     filtered.unpersist()
 finally:
     spark.stop()
