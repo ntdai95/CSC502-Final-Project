@@ -24,4 +24,4 @@ def run_pipeline(config):
     print(f"Saved scores to: {config.output_scores_csv}")
     print(f"Saved top anomalies to: {config.output_top_csv}")
     print(f"Saved figures to: {config.figures_dir}")
-    print(f"\nTop 10 anomalies:\n{scored_df.head(10)[['TAXON CONCEPT ID', 'anomaly_score', 'is_anomaly', 'LATITUDE', 'LONGITUDE']]}")
+    print(f"\nTop 10 anomalies:\n{scored_df.head(10)[['TAXON CONCEPT ID', 'anomaly_score', 'is_anomaly', 'LATITUDE', 'LONGITUDE', 'REVIEWED']]}")
