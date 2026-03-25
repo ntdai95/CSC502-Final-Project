@@ -27,27 +27,55 @@ def save_top_anomalies_map(scored_df, out_path, top_k=100):
     plt.close()
 
 
-def save_experiment_mean_score_plot(summary_df, out_path):
+def save_auc_vs_sample_size(summary_df, out_path):
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    grouped = summary_df.groupby("n_trees", as_index=False)["score_mean"].mean().sort_values("n_trees")
+    grouped = summary_df.groupby("sample_size", as_index=False)["auc"].mean().sort_values("sample_size")
     plt.figure(figsize=(8, 5))
-    plt.plot(grouped["n_trees"], grouped["score_mean"], marker="o")
-    plt.xlabel("Number of Trees")
-    plt.ylabel("Mean Anomaly Score")
-    plt.title("Mean Anomaly Score vs Number of Trees")
+    plt.plot(grouped["sample_size"], grouped["auc"], marker="o")
+    plt.xscale("log", base=2)
+    plt.xlabel("Sample Size")
+    plt.ylabel("AUC")
+    plt.title("AUC vs Sample Size")
     plt.tight_layout()
     plt.savefig(out_path, dpi=200)
     plt.close()
 
 
-def save_experiment_std_plot(summary_df, out_path):
+def save_time_vs_sample_size(summary_df, out_path):
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    grouped = summary_df.groupby("sample_size", as_index=False)["score_std"].mean().sort_values("sample_size")
+    grouped = summary_df.groupby("sample_size", as_index=False)["total_time_sec"].mean().sort_values("sample_size")
     plt.figure(figsize=(8, 5))
-    plt.plot(grouped["sample_size"], grouped["score_std"], marker="o")
+    plt.plot(grouped["sample_size"], grouped["total_time_sec"], marker="o")
+    plt.xscale("log", base=2)
     plt.xlabel("Sample Size")
-    plt.ylabel("Standard Deviation of Scores")
-    plt.title("Score Standard Deviation vs Sample Size")
+    plt.ylabel("Total Time (seconds)")
+    plt.title("Processing Time vs Sample Size")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def save_auc_vs_n_trees(summary_df, out_path):
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    grouped = summary_df.groupby("n_trees", as_index=False)["auc"].mean().sort_values("n_trees")
+    plt.figure(figsize=(8, 5))
+    plt.plot(grouped["n_trees"], grouped["auc"], marker="o")
+    plt.xlabel("Number of Trees")
+    plt.ylabel("AUC")
+    plt.title("AUC vs Number of Trees")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def save_time_vs_n_trees(summary_df, out_path):
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    grouped = summary_df.groupby("n_trees", as_index=False)["total_time_sec"].mean().sort_values("n_trees")
+    plt.figure(figsize=(8, 5))
+    plt.plot(grouped["n_trees"], grouped["total_time_sec"], marker="o")
+    plt.xlabel("Number of Trees")
+    plt.ylabel("Total Time (seconds)")
+    plt.title("Processing Time vs Number of Trees")
     plt.tight_layout()
     plt.savefig(out_path, dpi=200)
     plt.close()

@@ -13,3 +13,5 @@ class IForestConfig:
     random_state: int = 42
     top_k: int = 100
     anomaly_threshold: float = 0.60
+    tree_grid: tuple = (25, 50, 100, 200)
+    sample_grid: tuple = (2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096)

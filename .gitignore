@@ -1,10 +1,6 @@
 # Ignore large data directories
 data/*
 
-# Spark output folders
-*_spark_temp/
-spark-temp/
-
 # Python cache
 __pycache__/
 *.pyc
