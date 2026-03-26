@@ -5,7 +5,16 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, trim, to_date, dayofyear, sin, cos, lit, when, count as spark_count, sum as spark_sum
 
 
-spark_temp_dir = "data/spark-temp"
+input_file = "data/ebird_data_raw.txt"
+output_file = "data/ebird_data_processed.csv"
+temp_output_dir = output_file + "_spark_temp"
+if os.path.exists(temp_output_dir):
+    shutil.rmtree(temp_output_dir)
+
+if os.path.exists(output_file):
+    os.remove(output_file)
+
+spark_temp_dir = "data/spark_temp"
 os.makedirs(spark_temp_dir, exist_ok=True)
 spark = (
     SparkSession.builder
@@ -22,8 +31,6 @@ spark = (
 )
 spark.sparkContext.setLogLevel("ERROR")
 
-input_file = "data/ebird_data_raw.txt"
-output_file = "data/ebird_data_processed.csv"
 try:
     df = spark.read.option("header", True).option("sep", "\t").option("inferSchema", False).option("multiLine", False).csv(input_file)
     for c in df.columns:
@@ -95,13 +102,6 @@ try:
     final_df = filtered.join(species_freq, on="TAXON CONCEPT ID",
                              how="left").select("TAXON CONCEPT ID", "species_frequency", "OBSERVATION COUNT", "LATITUDE",
                                                 "LONGITUDE", "day_sin", "day_cos", "REVIEWED")
-
-    temp_output_dir = output_file + "_spark_temp"
-    if os.path.exists(temp_output_dir):
-        shutil.rmtree(temp_output_dir)
-
-    if os.path.exists(output_file):
-        os.remove(output_file)
 
     final_df.coalesce(1).write.mode("overwrite").option("header", True).csv(temp_output_dir)
     part_file = None
