@@ -45,7 +45,6 @@ This field is used as a  **ground-truth anomaly label for evaluation only**, and
 
 ---
 
-
 # 3. Data Preprocessing
 
 The raw eBird dataset is processed using Apache Spark to produce a clean dataset suitable for Isolation Forest.
@@ -56,8 +55,8 @@ The preprocessing pipeline performs the following steps:
 * remove provisional and escaped species observations
 * keep only `Traveling` or `Stationary` observation types
 * keep only complete checklists
-* filter observations with duration ≤ 300 minutes
-* filter observations with distance ≤ 10 km
+* keep only observations with duration ≤ 300 minutes
+* keep only observations with distance ≤ 10 km
 * convert numeric columns to proper numeric types
 * encode observation date using cyclic sine and cosine transformations
 * compute species frequency as a numerical representation of species identity
@@ -88,7 +87,7 @@ The model is trained using the feature columns:
 * observation count
 * latitude
 * longitude
-* seasonal encoding features
+* seasonal encoding features (day_sin, day_cos)
 
 The `REVIEWED` column is excluded from training to prevent information leakage.
 

@@ -67,7 +67,7 @@ try:
 
     filtered = (
         df.filter(col("CATEGORY") == "species")
-        .filter(col("EXOTIC CODE").isNull() | (col("EXOTIC CODE") == "") | (col("EXOTIC CODE") == "N"))
+        .filter(col("EXOTIC CODE").isNull() | (col("EXOTIC CODE") == "")) # Optionally add: | (col("EXOTIC CODE") == "N")
         .filter(col("OBSERVATION TYPE").isin("Traveling", "Stationary"))
         .filter(col("ALL SPECIES REPORTED") == 1)
         .filter(col("DURATION MINUTES") <= 300)
@@ -83,7 +83,9 @@ try:
         .withColumn("day_cos", cos(col("day_of_year") * lit(2 * math.pi / 365.0)))
     )
 
-    filtered = filtered.dropna().repartition(16, "TAXON CONCEPT ID").cache()
+    filtered = filtered.dropna(subset=["TAXON CONCEPT ID", "OBSERVATION COUNT", "LATITUDE", "LONGITUDE", "day_sin", "day_cos",
+                                       "REVIEWED"]).repartition(16, "TAXON CONCEPT ID").cache()
+    
     species_counts = filtered.groupBy("TAXON CONCEPT ID").agg(spark_count("*").alias("species_count"))
     total_count = species_counts.agg(spark_sum("species_count").alias("total")).collect()[0]["total"]
     species_freq = species_counts.withColumn("species_frequency",
