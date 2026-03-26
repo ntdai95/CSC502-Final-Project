@@ -5,6 +5,9 @@ def harmonic_number(n):
     if n <= 0:
         return 0.0
     
+    if n <= 10:
+        return sum(1.0 / i for i in range(1, n + 1))
+    
     return math.log(n) + 0.5772156649
 
 
