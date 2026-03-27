@@ -4,19 +4,43 @@
 
 ### Step 0: Confirm raw data exists
 
-<pre class="overflow-visible! px-0!" data-start="2996" data-end="3038"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!"><div class="sticky bg-token-border-light"></div></div></div><div class=""><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>Make sure the 'ebird_data_raw.txt' file is in the 'data' folder</span></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
+<pre>
+Make sure the 'ebird_data_raw.txt' file is in the 'data' folder
+</pre>
 
 ### Step 1: Process raw data
 
-<pre class="overflow-visible! px-0!" data-start="2996" data-end="3038"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!"><div class="sticky bg-token-border-light"></div></div></div><div class=""><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>python scripts/process_data.py</span></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
+<pre>
+python scripts/process_data.py
+</pre>This generates:
 
-### Step 2: Run Isolation Forest
+<pre>
+data/ebird_data_processed.csv
+</pre>
 
-<pre class="overflow-visible! px-0!" data-start="3073" data-end="3114"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!"><div class="sticky bg-token-border-light"></div></div></div><div class=""><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>python -m scripts.run_iforest</span></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
+### Step 2: Sample processed data
 
-### Step 3: Run experiments
+<pre>
+python scripts/sample_processed_data.py
+</pre>
 
-<pre class="overflow-visible! px-0!" data-start="3144" data-end="3189"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!"><div class="sticky bg-token-border-light"></div></div></div><div class=""><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>python -m scripts.run_experiments</span></div></div></div></div></div></div></div></div></div></div></div></div></pre>
+This generates:
+
+<pre>
+data/ebird_data_processed_sampled.csv
+</pre>
+
+### Step 3: Run Isolation Forest
+
+<pre>
+python -m scripts.run_iforest
+</pre>
+
+### Step 4: Run experiments
+
+<pre>
+python -m scripts.run_experiments
+</pre>
 
 ---
 
@@ -35,13 +59,15 @@ The processed dataset contains the following columns:
 | day_cos           | Cyclical encoding of day of year         |
 | REVIEWED          | eBird review flag                        |
 
-The `REVIEWED` column indicates whether an observation was flagged by the eBird review system for manual verification. Observations may be flagged when:
+The `REVIEWED` column indicates whether an observation was flagged by the eBird review system for manual verification.
+
+Observations may be flagged when:
 
 * the species is unusual for the location
 * the species is unusual for the time of year
 * the observation count is unusually high
 
-This field is used as a  **ground-truth anomaly label for evaluation only**, and is **not used as a feature during model training**.
+This field is used as a **ground-truth anomaly label for evaluation only**, and is **not used as a feature during model training**.
 
 ---
 
@@ -65,21 +91,45 @@ The resulting processed dataset is exported as a single CSV file.
 
 ---
 
-# 4. Implementation
+# 4. Sampling
+
+After preprocessing, the dataset is still too large. To reduce computational cost, a sampling step is applied.
+
+The sampling procedure performs the following steps:
+
+* partition the dataset into groups based on quantiles of `species_frequency`
+* perform uniform random sampling within each group
+* use the same sampling fraction across all groups
+
+This ensures that:
+
+* the dataset size is reduced
+* the relative representation of rare and common species is preserved
+* the distribution of the data remains consistent for downstream experiments
+
+The sampling fraction is controlled in the script:
+
+<pre>
+sample_fraction = 0.05
+</pre>
+
+---
+
+# 5. Implementation
 
 The Isolation Forest algorithm was implemented from scratch in Python.
 
 The implementation includes the following modules:
 
-| File                 | Purpose                                                        |
-| -------------------- | -------------------------------------------------------------- |
-| `itree.py`         | Isolation Tree construction                                    |
-| `iforest.py`       | Isolation Forest ensemble                                      |
-| `iforest_math.py`  | mathematical functions such asc(n)c(n)**c**(**n**) |
-| `data_utils.py`    | dataset loading and feature extraction                         |
-| `run_pipeline.py`  | anomaly scoring pipeline                                       |
-| `experiments.py`   | experiment automation                                          |
-| `visualization.py` | result visualization                                           |
+| File                 | Purpose                                |
+| -------------------- | -------------------------------------- |
+| `itree.py`         | Isolation Tree construction            |
+| `iforest.py`       | Isolation Forest ensemble              |
+| `iforest_math.py`  | mathematical functions such as c(n)    |
+| `data_utils.py`    | dataset loading and feature extraction |
+| `run_pipeline.py`  | anomaly scoring pipeline               |
+| `experiments.py`   | experiment automation                  |
+| `visualization.py` | result visualization                   |
 
 The model is trained using the feature columns:
 
@@ -93,7 +143,7 @@ The `REVIEWED` column is excluded from training to prevent information leakage.
 
 ---
 
-# 5. Experimental Setup
+# 6. Experimental Setup
 
 Experiments evaluate the effect of Isolation Forest hyperparameters on anomaly detection performance and computational efficiency.
 
@@ -101,15 +151,19 @@ The following parameters are varied:
 
 ### Number of Trees
 
-<pre class="overflow-visible! px-0!" data-start="6019" data-end="6043"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div><div class="pe-11 pt-3"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>25, 50, 100, 200</span></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
+<pre>
+25, 50, 100, 200
+</pre>
 
 ### Subsample Size (ψ)
 
-<pre class="overflow-visible! px-0!" data-start="6069" data-end="6129"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div><div class="pe-11 pt-3"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096</span></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
+<pre>
+2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
+</pre>
 
 ---
 
-# 6. Evaluation Metrics
+# 7. Evaluation Metrics
 
 The following metrics are measured:
 
@@ -127,7 +181,7 @@ These metrics measure the scalability of the algorithm.
 
 ---
 
-# 7. Results
+# 8. Results
 
 The experimental results include:
 
