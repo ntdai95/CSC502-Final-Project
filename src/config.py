@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class IForestConfig:
-    input_csv: str = "data/ebird_data_processed.csv"
+    input_csv: str = "data/ebird_data_processed_sampled.csv"
     output_scores_csv: str = "outputs/anomaly_scores.csv"
     output_top_csv: str = "outputs/top_anomalies.csv"
     output_experiment_csv: str = "outputs/experiment_summary.csv"
