@@ -1,81 +1,159 @@
 import pandas as pd
-import geopandas as gpd
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import contextily as cx
-import numpy as np
+from pyproj import Transformer
+import mplcursors
 
-# Load top anomalies from CSV (already pre-ranked; take top 100 by anomaly_rank)
+# ── Build TAXON CONCEPT ID → species name lookup from raw eBird file ──────────
+# Read only the 3 needed columns in chunks to avoid loading the 11 GB file fully.
+RAW_FILE = "ebd_CA-BC_201601_202601_smp_relFeb-2026.txt"
+CHUNK_SIZE = 200_000
+
+print("Building species name lookup from raw eBird file (chunked)...")
+taxon_lookup = {}   # { "avibase-XXXX": ("Common Name", "Scientific Name") }
+for chunk in pd.read_csv(
+    RAW_FILE,
+    sep="\t",
+    usecols=["TAXON CONCEPT ID", "COMMON NAME", "SCIENTIFIC NAME"],
+    dtype=str,
+    chunksize=CHUNK_SIZE,
+    low_memory=False,
+):
+    # Only keep rows whose taxon ID we haven't seen yet
+    new_rows = chunk[~chunk["TAXON CONCEPT ID"].isin(taxon_lookup)]
+    for _, row in new_rows.drop_duplicates("TAXON CONCEPT ID").iterrows():
+        taxon_lookup[row["TAXON CONCEPT ID"]] = (
+            row["COMMON NAME"], row["SCIENTIFIC NAME"]
+        )
+print(f"  {len(taxon_lookup):,} unique species found.")
+
+# ── Data Loading ──────────────────────────────────────────────────────────────
+print("Loading full observation dataset for density background...")
+full_df = pd.read_csv("anomaly_scores 2.csv", usecols=["LATITUDE", "LONGITUDE"])
+full_df = full_df.dropna(subset=["LATITUDE", "LONGITUDE"])
+print(f"  {len(full_df):,} total observations loaded.")
+
 top_100_df = pd.read_csv("top_anomalies.csv").nsmallest(100, "anomaly_rank")
 
-# 1. Round coordinates to ~1 km grid to detect overlapping points
-#    (~0.01 degrees ≈ 1 km at mid-latitudes; adjust finer/coarser as needed)
+# Attach species names
+top_100_df["common_name"]     = top_100_df["TAXON CONCEPT ID"].map(lambda t: taxon_lookup.get(t, ("Unknown", ""))[0])
+top_100_df["scientific_name"] = top_100_df["TAXON CONCEPT ID"].map(lambda t: taxon_lookup.get(t, ("", "Unknown"))[1])
+
+# ── Spatial binning (~10 km grid) ─────────────────────────────────────────────
 GRID_DEG = 0.1
 top_100_df["lat_bin"] = (top_100_df["LATITUDE"] / GRID_DEG).round() * GRID_DEG
 top_100_df["lon_bin"] = (top_100_df["LONGITUDE"] / GRID_DEG).round() * GRID_DEG
 
-# 2. Count how many points fall in each bin
+def summarise_bin(g):
+    species_list = ", ".join(sorted(g["common_name"].unique()))
+    return pd.Series({
+        "num_anomalies":  len(g),
+        "any_confirmed":  int(g["REVIEWED"].max()),
+        "species_names":  species_list,
+        "best_rank":      int(g["anomaly_rank"].min()),
+    })
+
 binned = (
     top_100_df.groupby(["lat_bin", "lon_bin"])
-    .agg(count=("anomaly_rank", "size"), best_rank=("anomaly_rank", "min"))
+    .apply(summarise_bin, include_groups=False)
     .reset_index()
 )
 
-# 3. Convert to GeoDataFrame
-gdf = gpd.GeoDataFrame(
-    binned,
-    geometry=gpd.points_from_xy(binned["lon_bin"], binned["lat_bin"]),
-    crs="EPSG:4326",
+# ── Coordinate Transform ───────────────────────────────────────────────────────
+transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+
+full_x, full_y = transformer.transform(
+    full_df["LONGITUDE"].values, full_df["LATITUDE"].values
 )
-gdf = gdf.to_crs(epsg=3857)
+bin_x, bin_y = transformer.transform(
+    binned["lon_bin"].values, binned["lat_bin"].values
+)
+binned = binned.assign(x=bin_x, y=bin_y)
 
-# 4. Scale marker size by count (base size + extra per duplicate)
-BASE_SIZE = 60
-SIZE_SCALE = 80   # extra area per additional point in the bin
-gdf["markersize"] = BASE_SIZE + (gdf["count"] - 1) * SIZE_SCALE
+BASE_SIZE  = 100
+SIZE_SCALE = 120
+binned["markersize"] = BASE_SIZE + (binned["num_anomalies"] - 1) * SIZE_SCALE
 
-# 5. Color by count using a sequential colormap
-fig, ax = plt.subplots(figsize=(12, 10))
+confirmed   = binned[binned["any_confirmed"] == 1]
+unconfirmed = binned[binned["any_confirmed"] != 1]
 
-scatter = ax.scatter(
-    gdf.geometry.x,
-    gdf.geometry.y,
-    s=gdf["markersize"],
-    c=gdf["count"],
-    cmap="YlOrRd",
-    edgecolor="black",
-    linewidth=0.6,
-    alpha=0.85,
-    zorder=3,
+# ── Plot ──────────────────────────────────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(14, 12))
+
+# 1. Background density heatmap
+hb = ax.hexbin(
+    full_x, full_y,
+    gridsize=100, cmap="Blues", bins="log",
+    alpha=0.65, mincnt=1, zorder=1
+)
+cbar = plt.colorbar(hb, ax=ax, fraction=0.03, pad=0.02)
+cbar.set_label("Total Observations per Cell (log₁₀ scale)", fontsize=11)
+
+# 2. Basemap
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron, reset_extent=False, zorder=0)
+
+# 3. Red circles (unconfirmed bins)
+sc_unc = ax.scatter(
+    unconfirmed["x"], unconfirmed["y"],
+    s=unconfirmed["markersize"], marker="o",
+    color="crimson", edgecolor="white",
+    linewidth=0.8, alpha=0.9, zorder=3,
+    label=f"Top-100 anomaly, not confirmed (n={int(unconfirmed['num_anomalies'].sum())})"
 )
 
-# 6. Add colorbar showing point count per location
-cbar = plt.colorbar(scatter, ax=ax, fraction=0.03, pad=0.02)
-cbar.set_label("# of Top-100 Anomalies at Location", fontsize=11)
-cbar.ax.tick_params(labelsize=9)
+# 4. Gold stars (confirmed bins)
+sc_con = ax.scatter(
+    confirmed["x"], confirmed["y"],
+    s=confirmed["markersize"] * 2.0, marker="*",
+    color="gold", edgecolor="black",
+    linewidth=0.7, alpha=0.95, zorder=4,
+    label=f"Top-100 anomaly, REVIEWED=1 (n={int(confirmed['num_anomalies'].sum())})"
+)
 
-# 7. Add a size legend so readers understand what circle area means
-unique_counts = sorted(gdf["count"].unique())
-legend_counts = [c for c in [1, 2, 3, 5] if c <= max(unique_counts)]
-if max(unique_counts) not in legend_counts:
-    legend_counts.append(max(unique_counts))
+# ── Interactive hover tooltips ─────────────────────────────────────────────────
+def make_tooltip(row):
+    lines = [
+        f"Species: {row['species_names']}",
+        f"Anomalies in cell: {int(row['num_anomalies'])}",
+        f"Best rank: #{int(row['best_rank'])}",
+        f"Confirmed (REVIEWED=1): {'Yes' if row['any_confirmed'] else 'No'}",
+    ]
+    return "\n".join(lines)
 
-legend_handles = [
+# Attach hover to both scatter artists
+for sc, subset in [(sc_unc, unconfirmed), (sc_con, confirmed)]:
+    rows = subset.reset_index(drop=True)
+    cursor = mplcursors.cursor(sc, hover=True)
+
+    @cursor.connect("add")
+    def on_add(sel, _rows=rows):
+        sel.annotation.set_text(make_tooltip(_rows.iloc[sel.index]))
+        sel.annotation.get_bbox_patch().set(fc="white", alpha=0.85)
+
+# ── Size legend ───────────────────────────────────────────────────────────────
+max_count = int(binned["num_anomalies"].max())
+legend_counts = sorted(set([1, 2] + ([max_count] if max_count > 2 else [])))
+size_handles = [
     plt.scatter([], [], s=BASE_SIZE + (c - 1) * SIZE_SCALE,
-                color="tomato", edgecolor="black", linewidth=0.6, alpha=0.85,
-                label=f"{c} point{'s' if c > 1 else ''}")
+                color="crimson", edgecolor="white", linewidth=0.8, alpha=0.9,
+                label=f"{c} anomal{'y' if c == 1 else 'ies'} in cell")
     for c in legend_counts
 ]
-ax.legend(handles=legend_handles, title="Count per location",
-          loc="lower left", fontsize=9, title_fontsize=9,
-          framealpha=0.85)
+size_legend = ax.legend(
+    handles=size_handles,
+    title="Dot size = # anomalies\nin 0.1° grid cell",
+    loc="lower right", fontsize=9, title_fontsize=9, framealpha=0.88
+)
+ax.add_artist(size_legend)
 
-# 8. Add basemap
-cx.add_basemap(ax, source=cx.providers.CartoDB.Positron)
-
+ax.legend(loc="lower left", fontsize=10, framealpha=0.9)
 ax.set_axis_off()
-ax.set_title("Top 100 Anomalies — Dot Size & Color = Count per Location",
-             fontsize=13, pad=12)
+ax.set_title(
+    "Top-100 Isolation Forest Anomalies vs. Background Birder Activity\n"
+    "(Hex colour = observation density; dot size = anomalies per 0.1° cell; ★ = REVIEWED=1)  |  Hover dots for species",
+    fontsize=12, pad=14
+)
 
 plt.savefig("Top_100_Anomalies_300dpi.png", dpi=300, bbox_inches="tight")
+print("Saved: Top_100_Anomalies_300dpi.png")
 plt.show()
