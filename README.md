@@ -1,50 +1,69 @@
 # CSC502-Final-Project
 
+[**Final Report (PDF)**](papers/Final%20Report.pdf) &nbsp;·&nbsp;
+[**Final Presentation (PDF)**](papers/Final%20Presentation.pdf)
+
+<details>
+<summary><b>Contents</b></summary>
+
+- [1. How to run](#1-how-to-run)
+- [2. Dataset and Ground Truth Labels](#2-dataset-and-ground-truth-labels)
+- [3. Data Preprocessing](#3-data-preprocessing)
+- [4. Sampling](#4-sampling)
+- [5. Implementation](#5-implementation)
+- [6. Experimental Setup](#6-experimental-setup)
+- [7. Evaluation Metrics](#7-evaluation-metrics)
+- [8. Results](#8-results)
+
+</details>
+
 ## 1. How to run
 
 ### Step 0: Confirm raw data exists
 
-<pre>
+```
 Make sure the 'ebird_data_raw.txt' file is in the 'data' folder
-</pre>
+```
 
 ### Step 1: Process raw data
 
-<pre>
+```bash
 python scripts/process_data.py
-</pre>This generates:
-
-<pre>
-data/ebird_data_processed.csv
-</pre>
-
-### Step 2: Sample processed data
-
-<pre>
-python scripts/sample_processed_data.py
-</pre>
+```
 
 This generates:
 
-<pre>
+```
+data/ebird_data_processed.csv
+```
+
+### Step 2: Sample processed data
+
+```bash
+python scripts/sample_processed_data.py
+```
+
+This generates:
+
+```
 data/ebird_data_processed_sampled.csv
-</pre>
+```
 
 ### Step 3: Run Isolation Forest
 
-<pre>
+```bash
 python -m scripts.run_iforest
-</pre>
+```
 
 ### Step 4: Run experiments
 
-<pre>
+```bash
 python -m scripts.run_experiments
-</pre>
+```
 
 ---
 
-# 2. Dataset and Ground Truth Labels
+## 2. Dataset and Ground Truth Labels
 
 The processed dataset contains the following columns:
 
@@ -71,7 +90,7 @@ This field is used as a **ground-truth anomaly label for evaluation only**, and 
 
 ---
 
-# 3. Data Preprocessing
+## 3. Data Preprocessing
 
 The raw eBird dataset is processed using Apache Spark to produce a clean dataset suitable for Isolation Forest.
 
@@ -91,7 +110,7 @@ The resulting processed dataset is exported as a single CSV file.
 
 ---
 
-# 4. Sampling
+## 4. Sampling
 
 After preprocessing, the dataset is still too large. To reduce computational cost, a sampling step is applied.
 
@@ -109,13 +128,13 @@ This ensures that:
 
 The sampling fraction is controlled in the script:
 
-<pre>
+```
 sample_fraction = 0.05
-</pre>
+```
 
 ---
 
-# 5. Implementation
+## 5. Implementation
 
 The Isolation Forest algorithm was implemented from scratch in Python.
 
@@ -143,7 +162,7 @@ The `REVIEWED` column is excluded from training to prevent information leakage.
 
 ---
 
-# 6. Experimental Setup
+## 6. Experimental Setup
 
 Experiments evaluate the effect of Isolation Forest hyperparameters on anomaly detection performance and computational efficiency.
 
@@ -151,19 +170,19 @@ The following parameters are varied:
 
 ### Number of Trees
 
-<pre>
+```
 25, 50, 100, 200
-</pre>
+```
 
 ### Subsample Size (ψ)
 
-<pre>
+```
 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
-</pre>
+```
 
 ---
 
-# 7. Evaluation Metrics
+## 7. Evaluation Metrics
 
 The following metrics are measured:
 
@@ -181,22 +200,47 @@ These metrics measure the scalability of the algorithm.
 
 ---
 
-# 8. Results
+## 8. Results
 
 The experimental results include:
 
 ### Detection Performance
 
 * ROC AUC vs subsample size
+
+  ![ROC AUC against subsample size](outputs/figures/auc_vs_sample_size.png)
+
 * ROC AUC vs number of trees
+
+  ![ROC AUC against number of trees](outputs/figures/auc_vs_n_trees.png)
+
 
 ### Computational Efficiency
 
 * runtime vs subsample size
+
+  ![Runtime against subsample size](outputs/figures/time_vs_sample_size.png)
+
 * runtime vs number of trees
+
+  ![Runtime against number of trees](outputs/figures/time_vs_n_trees.png)
+
 
 ### Anomaly Analysis
 
 * histogram of anomaly scores
+
+  ![Distribution of anomaly scores](outputs/figures/score_histogram.png)
+
 * geographic map of top anomalous observations
+
+  ![Geographic map of the top anomalous observations](outputs/figures/top_anomalies_map.png)
+
 * ranked list of highest anomaly scores
+
+  [`outputs/top_anomalies.csv`](outputs/top_anomalies.csv)
+
+  ![Top 100 anomalies](outputs/figures/Top_100_Anomalies_300dpi.png)
+
+  ![Anomaly rate deviation map](outputs/figures/Anomaly_Rate_Deviation_Map.png)
+
