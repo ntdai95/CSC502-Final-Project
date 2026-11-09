@@ -82,7 +82,7 @@ sc_unc = ax.scatter(
     label=f"Model top-100, not confirmed (n={len(unconfirmed)})"
 )
 
-# 4. Confirmed (REVIEWED=1): small vivid-orange dots — same size, different colour
+# 4. Confirmed (REVIEWED=1): small vivid-orange dots, same size, different colour
 sc_con = ax.scatter(
     confirmed["x"], confirmed["y"],
     s=30, marker="o",
