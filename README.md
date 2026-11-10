@@ -1,4 +1,4 @@
-# CSC502-Final-Project
+# Anomaly Detection at Scale on Species Data
 
 [**Final Report (PDF)**](papers/Final%20Report.pdf) &nbsp;·&nbsp;
 [**Final Presentation (PDF)**](papers/Final%20Presentation.pdf)
