@@ -1,6 +1,6 @@
 # Anomaly Detection at Scale on Species Data
 
-This project was completed by a team of three and evaluates Isolation Forest on **1,093,203 eBird observations** from British Columbia. The detector reached **ROC-AUC 0.67**, the experiments confirmed linear runtime scaling, and the analysis identified geographic swamping in dense regions. I implemented the algorithm from the published paper and processed the dataset with PySpark.
+This project was completed by a team of three for Systems for Massive Datasets (CSC 502) at the University of Victoria and evaluates Isolation Forest on **1,093,203 eBird observations** from British Columbia. The detector reached **ROC-AUC 0.67**, the experiments confirmed linear runtime scaling, and the analysis identified geographic swamping in dense regions. I implemented the algorithm from the published paper and processed the dataset with PySpark.
 
 [**Final Report (PDF)**](papers/Final%20Report.pdf) &nbsp;·&nbsp;
 [**Final Presentation (PDF)**](papers/Final%20Presentation.pdf)
